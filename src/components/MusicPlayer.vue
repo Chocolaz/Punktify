@@ -5,24 +5,24 @@
   />
 
   <div
-    class="music-player text-gray-200 p-6 rounded-lg shadow-2xl max-w-md mx-auto"
+    class="music-player text-gray-200 p-4 rounded-lg shadow-lg max-w-sm mx-auto"
   >
-    <div class="album-art mb-4">
+    <div class="album-art mb-3 flex items-center justify-center">
       <img
         :src="currentSong.albumArt"
         :alt="currentSong.title + ' album art'"
-        class="w-full h-64 object-cover rounded-md shadow-lg"
+        class="h-60 object-cover rounded-md shadow-md"
       />
     </div>
-    <h2 class="text-2xl font-bold mb-2 text-red-500">
+    <h2 class="text-xl font-bold mb-1 text-red-500">
       {{ currentSong.title }}
     </h2>
-    <h3 class="text-lg font-semibold mb-4 text-gray-400">
+    <h3 class="text-base font-semibold mb-3 text-gray-400">
       {{ currentSong.artist }}
     </h3>
 
     <div
-      class="progress-bar bg-gray-700 rounded-full h-2 mb-4"
+      class="progress-bar bg-gray-700 rounded-full h-1 mb-3"
       @click="seek"
       ref="progressBar"
     >
@@ -32,19 +32,29 @@
       ></div>
     </div>
 
-    <div class="time flex justify-between text-sm mb-4">
+    <div class="time flex justify-between text-xs mb-3">
       <span>{{ currentTime }}</span>
       <span>{{ duration }}</span>
     </div>
 
-    <div class="controls relative flex items-center mb-6">
+    <div class="controls relative flex items-center mb-4">
+      <!-- Shuffle Button -->
+      <button
+        @click="toggleShuffle"
+        :class="{ 'text-red-500': isShuffling, 'text-slate-500': !isShuffling }"
+        class="absolute left-0 text-xl hover:text-red-500 transition-colors duration-300"
+      >
+        <i class="material-icons" style="font-size: 1.5rem; line-height: 1"
+          >shuffle</i
+        >
+      </button>
       <!-- Center Controls -->
-      <div class="center-controls flex items-center space-x-4 mx-auto">
+      <div class="center-controls flex items-center space-x-3 mx-auto">
         <button
           @click="previous"
-          class="text-3xl hover:text-red-500 transition-colors duration-300"
+          class="text-2xl hover:text-red-500 transition-colors duration-300"
         >
-          <i class="material-icons" style="font-size: 2.5rem; line-height: 1"
+          <i class="material-icons" style="font-size: 1.5rem; line-height: 1"
             >skip_previous</i
           >
         </button>
@@ -54,16 +64,16 @@
         >
           <i
             class="material-icons custom-icon"
-            style="font-size: 3.5rem; line-height: 1"
+            style="font-size: 2.5rem; line-height: 1"
           >
             {{ isPlaying ? 'pause_circle_filled' : 'play_circle_filled' }}
           </i>
         </button>
         <button
           @click="next"
-          class="text-3xl hover:text-red-500 transition-colors duration-300"
+          class="text-2xl hover:text-red-500 transition-colors duration-300"
         >
-          <i class="material-icons" style="font-size: 2.5rem; line-height: 1"
+          <i class="material-icons" style="font-size: 1.5rem; line-height: 1"
             >skip_next</i
           >
         </button>
@@ -71,16 +81,16 @@
       <!-- Loop Button -->
       <button
         @click="toggleLoop"
-        :class="{ 'text-slate-500': isLooping, 'text-red-500': !isLooping }"
-        class="absolute right-0 text-3xl hover:text-red-500 transition-colors duration-300"
+        :class="{ 'text-red-500': isLooping, 'text-slate-500': !isLooping }"
+        class="absolute right-0 text-2xl hover:text-red-500 transition-colors duration-300"
       >
-        <i class="material-icons" style="font-size: 2.5rem; line-height: 1"
+        <i class="material-icons" style="font-size: 1.5rem; line-height: 1"
           >loop</i
         >
       </button>
     </div>
 
-    <div class="volume-control flex items-center space-x-2 mb-4">
+    <div class="volume-control flex items-center space-x-2 mb-3">
       <span class="text-lg">🔈</span>
       <input
         type="range"
@@ -118,10 +128,12 @@ export default {
     return {
       isPlaying: false,
       isLooping: false,
+      isShuffling: false,
       currentTime: '0:00',
       duration: '0:00',
       progress: 0,
-      volume: 1
+      volume: 1,
+      playedSongs: []
     }
   },
   watch: {
@@ -213,17 +225,52 @@ export default {
       }
     },
     next() {
-      const currentIndex = this.songs.findIndex(
-        (song) => song.src === this.currentSong.src
-      )
-      if (currentIndex < this.songs.length - 1) {
-        this.$emit('update:currentSong', this.songs[currentIndex + 1])
-      } else if (this.isLooping) {
-        this.$emit('update:currentSong', this.songs[0])
+      let nextSong
+
+      if (this.isShuffling) {
+        // Pick a random song that hasn't been played yet
+        const unplayedSongs = this.songs.filter(
+          (song) => !this.playedSongs.includes(song)
+        )
+
+        if (unplayedSongs.length === 0) {
+          // All songs have been played; reset the playedSongs list
+          this.playedSongs = []
+          nextSong = this.songs[Math.floor(Math.random() * this.songs.length)]
+        } else {
+          nextSong =
+            unplayedSongs[Math.floor(Math.random() * unplayedSongs.length)]
+        }
+      } else {
+        const currentIndex = this.songs.findIndex(
+          (song) => song.src === this.currentSong.src
+        )
+        nextSong =
+          currentIndex < this.songs.length - 1
+            ? this.songs[currentIndex + 1]
+            : this.songs[0] // Go back to the first song if it's the last in the list
       }
+
+      this.playedSongs.push(nextSong)
+      this.$emit('update:currentSong', nextSong)
     },
     toggleLoop() {
       this.isLooping = !this.isLooping
+    },
+    toggleShuffle() {
+      this.isShuffling = !this.isShuffling
+      this.playedSongs = [] // Reset the played songs when shuffling is toggled
+    },
+    shuffleArray(array) {
+      const shuffledArray = [...array]
+      for (let i = shuffledArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[shuffledArray[i], shuffledArray[j]] = [
+          shuffledArray[j],
+          shuffledArray[i]
+        ]
+      }
+      return shuffledArray
     },
     seek(event) {
       const progressBar = this.$refs.progressBar

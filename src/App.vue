@@ -1,9 +1,6 @@
 <template>
   <video autoplay muted loop>
-    <source
-      src="/src/assets/bgvideo.mp4"
-      type="video/mp4"
-    />
+    <source src="/src/assets/bgvideo.mp4" type="video/mp4" />
   </video>
 
   <div id="app" class="min-h-screen py-10">
@@ -19,7 +16,7 @@
 
 <script>
 import MusicPlayer from './components/MusicPlayer.vue'
-import Playlist from './components/Playlist.vue'
+import Playlist from './components/PlayList.vue'
 
 // Use import.meta.glob to fetch all music files
 // Use import.meta.glob to fetch all music and cover files
