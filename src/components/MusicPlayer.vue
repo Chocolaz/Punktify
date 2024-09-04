@@ -14,9 +14,27 @@
         class="h-60 object-cover rounded-md shadow-md"
       />
     </div>
-    <h2 class="text-xl font-bold mb-1 text-red-500">
+
+    <h2
+      v-if="currentSong.title.length <= 20"
+      class="text-xl font-bold mb-1 text-red-500"
+    >
       {{ currentSong.title }}
     </h2>
+
+    <h2
+      v-else-if="
+        currentSong.title.length > 20 && currentSong.title.length <= 30
+      "
+      class="text-lg font-semibold mb-1 text-red-500"
+    >
+      {{ currentSong.title }}
+    </h2>
+
+    <h2 v-else class="text-sm font-semibold mb-1 text-red-500">
+      {{ currentSong.title }}
+    </h2>
+
     <h3 class="text-base font-semibold mb-3 text-gray-400">
       {{ currentSong.artist }}
     </h3>
@@ -296,5 +314,11 @@ export default {
 }
 .center-controls {
   margin: 0 auto;
+}
+
+.music-player h2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
