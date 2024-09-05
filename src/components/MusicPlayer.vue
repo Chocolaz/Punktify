@@ -15,25 +15,30 @@
       />
     </div>
 
-    <h2
-      v-if="currentSong.title.length <= 20"
-      class="text-xl font-bold mb-1 text-red-500"
-    >
-      {{ currentSong.title }}
-    </h2>
+    <div class="title-container">
+      <h2
+        v-if="currentSong.title.length <= 20"
+        class="title flex items-start text-xl font-bold mb-1 text-red-500"
+      >
+        {{ currentSong.title }}
+      </h2>
 
-    <h2
-      v-else-if="
-        currentSong.title.length > 20 && currentSong.title.length <= 30
-      "
-      class="text-lg font-semibold mb-1 text-red-500"
-    >
-      {{ currentSong.title }}
-    </h2>
+      <h2
+        v-else-if="
+          currentSong.title.length > 20 && currentSong.title.length <= 30
+        "
+        class="title flex items-start text-lg font-semibold mb-1 text-red-500"
+      >
+        {{ currentSong.title }}
+      </h2>
 
-    <h2 v-else class="text-sm font-semibold mb-1 text-red-500">
-      {{ currentSong.title }}
-    </h2>
+      <h2
+        v-else
+        class="title flex items-start text-sm font-semibold mb-1 text-red-500"
+      >
+        {{ currentSong.title }}
+      </h2>
+    </div>
 
     <h3 class="text-base font-semibold mb-3 text-gray-400">
       {{ currentSong.artist }}
@@ -210,10 +215,19 @@ export default {
       }
     },
     handleEnd() {
-      if (this.isLooping) {
-        this.next()
+      const currentIndex = this.songs.findIndex(
+        (song) => song.src === this.currentSong.src
+      )
+
+      if (currentIndex === this.songs.length - 1) {
+        if (this.isLooping) {
+          this.$emit('update:currentSong', this.songs[0])
+          this.isPlaying = true
+        } else {
+          this.isPlaying = false
+        }
       } else {
-        this.isPlaying = false
+        this.next()
       }
     },
     updateTime() {
@@ -238,7 +252,13 @@ export default {
       const currentIndex = this.songs.findIndex(
         (song) => song.src === this.currentSong.src
       )
-      if (currentIndex > 0) {
+
+      // if index ===0 (first song) after click it will go to last song
+      if (currentIndex === 0) {
+        // Go to the last song in the list
+        this.$emit('update:currentSong', this.songs[this.songs.length - 1])
+      } else {
+        // Go to the previous song in the list
         this.$emit('update:currentSong', this.songs[currentIndex - 1])
       }
     },
@@ -266,7 +286,7 @@ export default {
         nextSong =
           currentIndex < this.songs.length - 1
             ? this.songs[currentIndex + 1]
-            : this.songs[0] // Go back to the first song if it's the last in the list
+            : this.songs[0]
       }
 
       this.playedSongs.push(nextSong)
@@ -320,5 +340,23 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.progress-bar,
+.volume-control input {
+  cursor: pointer;
+}
+
+.title-container {
+  position: relative; /* Ensure container's position is relative */
+  height: 2.5rem; /* Fixed height to match the maximum height of the text */
+  overflow: hidden; /* Hide any overflow to keep the layout consistent */
+}
+
+.title {
+  position: absolute; /* Position text absolutely within the container */
+  width: 100%; /* Ensure text occupies full width of the container */
+  text-align: center; /* Center-align text horizontally */
+  line-height: 2.5rem; /* Adjust line-height to align text vertically */
 }
 </style>
