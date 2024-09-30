@@ -40,15 +40,10 @@ npm run dev
 ## Demo
 
 Watch the music player in action in this [video demo](https://drive.google.com/file/d/1Cl60nXTx5jBawtHa-u5kJ_GN27cwQSJy/view?usp=sharing).
+[TRY IT](https://chocolaz.github.io/Punktify/)
 
 ## Screenshots
-
-Here are some screenshots of the music player's interface:
 
 ### Music Player Controls
 
 ![Music Player Controls](src/assets/demo/player.png)
-
-### Playlist View
-
-![Playlist View](src/assets/demo/playlist.png)
