@@ -1,6 +1,6 @@
 <template>
   <div class="playlist bg-gray-900 text-gray-200 p-6 rounded-lg shadow-lg mt-6">
-    <h3 class="text-2xl mb-4 border-b-2 border-gray-700 pb-2">Playlist</h3>
+    <h3 class="text-2xl mb-4 border-b-2 border-gray-700 pb-2 pirata-one-regular">Playlist</h3>
     <ul class="list-none p-0 m-0">
       <li
         v-for="(song, index) in songs"
@@ -29,6 +29,6 @@ export default {
 
 <style scoped>
 .playlist {
-  background: #1a1a1a; /* Dark background for a grungy look */
+  background: #1a1a1a;
 }
 </style>

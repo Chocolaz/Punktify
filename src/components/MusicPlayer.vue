@@ -15,10 +15,10 @@
       />
     </div>
 
-    <div class="title-container">
+    <div class="title-container pirata-one-regular">
       <h2
         v-if="currentSong.title.length <= 20"
-        class="title flex items-start text-xl font-bold mb-1 text-red-500"
+        class="title flex items-start text-2xl font-bold mb-1 text-red-500"
       >
         {{ currentSong.title }}
       </h2>
@@ -27,14 +27,14 @@
         v-else-if="
           currentSong.title.length > 20 && currentSong.title.length <= 30
         "
-        class="title flex items-start text-lg font-semibold mb-1 text-red-500"
+        class="title flex items-start text-xl font-semibold mb-1 text-red-500"
       >
         {{ currentSong.title }}
       </h2>
 
       <h2
         v-else
-        class="title flex items-start text-sm font-semibold mb-1 text-red-500"
+        class="title flex items-start text-lg font-semibold mb-1 text-red-500"
       >
         {{ currentSong.title }}
       </h2>
@@ -135,193 +135,181 @@
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    currentSong: {
-      type: Object,
-      required: true
-    },
-    songs: {
-      type: Array,
-      required: true
-    }
-  },
-  data() {
-    return {
-      isPlaying: false,
-      isLooping: false,
-      isShuffling: false,
-      currentTime: '0:00',
-      duration: '0:00',
-      progress: 0,
-      volume: 1,
-      playedSongs: []
-    }
-  },
-  watch: {
-    currentSong: {
-      handler(newSong) {
-        this.$nextTick(() => {
-          this.stop()
-          this.isPlaying = false
-          const audio = this.$refs.audio
-          if (audio) {
-            audio.src = newSong.src
-            audio.load()
-            audio.addEventListener(
-              'canplaythrough',
-              () => {
-                audio
-                  .play()
-                  .then(() => {
-                    this.isPlaying = true
-                  })
-                  .catch((error) => {
-                    console.error('Failed to play the audio:', error)
-                  })
-              },
-              { once: true }
-            )
-          }
-        })
-      },
-      immediate: true
-    },
-    volume(newVolume) {
-      if (this.$refs.audio) {
-        this.$refs.audio.volume = newVolume
-      }
-    }
-  },
-  methods: {
-    playPause() {
-      const audio = this.$refs.audio
-      if (audio) {
-        if (this.isPlaying) {
-          audio.pause()
-        } else {
-          audio.play()
-        }
-        this.isPlaying = !this.isPlaying
-      }
-    },
-    stop() {
-      const audio = this.$refs.audio
-      if (audio) {
-        audio.pause()
-        audio.currentTime = 0
-        this.isPlaying = false
-      }
-    },
-    handleEnd() {
-      const currentIndex = this.songs.findIndex(
-        (song) => song.src === this.currentSong.src
+<script setup>
+import { ref, watch, nextTick } from 'vue'
+
+const emit = defineEmits(['update:currentSong'])
+
+const props = defineProps({
+  currentSong: Object,
+  songs: Array
+})
+
+const isPlaying = ref(false)
+const isLooping = ref(false)
+const isShuffling = ref(false)
+const currentTime = ref('0:00')
+const duration = ref('0:00')
+const progress = ref(0)
+const volume = ref(1)
+const playedSongs = ref([])
+
+watch(
+  () => props.currentSong,
+  async (newSong) => {
+    await nextTick()
+    stop()
+    isPlaying.value = false
+    const audio = document.querySelector('audio')
+    if (audio) {
+      audio.src = newSong.src
+      audio.load()
+      audio.addEventListener(
+        'canplaythrough',
+        () => {
+          audio
+            .play()
+            .then(() => {
+              isPlaying.value = true
+            })
+            .catch((error) => {
+              console.error('Failed to play the audio:', error)
+            })
+        },
+        { once: true }
       )
-
-      if (currentIndex === this.songs.length - 1) {
-        if (this.isLooping) {
-          this.$emit('update:currentSong', this.songs[0])
-          this.isPlaying = true
-        } else {
-          this.isPlaying = false
-        }
-      } else {
-        this.next()
-      }
-    },
-    updateTime() {
-      const audio = this.$refs.audio
-      if (audio) {
-        this.currentTime = this.formatTime(audio.currentTime)
-        this.progress = (audio.currentTime / audio.duration) * 100
-      }
-    },
-    setDuration() {
-      const audio = this.$refs.audio
-      if (audio) {
-        this.duration = this.formatTime(audio.duration)
-      }
-    },
-    formatTime(seconds) {
-      const mins = Math.floor(seconds / 60)
-      const secs = Math.floor(seconds % 60)
-      return `${mins}:${secs.toString().padStart(2, '0')}`
-    },
-    previous() {
-      const currentIndex = this.songs.findIndex(
-        (song) => song.src === this.currentSong.src
-      )
-
-      // if index ===0 (first song) after click it will go to last song
-      if (currentIndex === 0) {
-        // Go to the last song in the list
-        this.$emit('update:currentSong', this.songs[this.songs.length - 1])
-      } else {
-        // Go to the previous song in the list
-        this.$emit('update:currentSong', this.songs[currentIndex - 1])
-      }
-    },
-    next() {
-      let nextSong
-
-      if (this.isShuffling) {
-        // Pick a random song that hasn't been played yet
-        const unplayedSongs = this.songs.filter(
-          (song) => !this.playedSongs.includes(song)
-        )
-
-        if (unplayedSongs.length === 0) {
-          // All songs have been played; reset the playedSongs list
-          this.playedSongs = []
-          nextSong = this.songs[Math.floor(Math.random() * this.songs.length)]
-        } else {
-          nextSong =
-            unplayedSongs[Math.floor(Math.random() * unplayedSongs.length)]
-        }
-      } else {
-        const currentIndex = this.songs.findIndex(
-          (song) => song.src === this.currentSong.src
-        )
-        nextSong =
-          currentIndex < this.songs.length - 1
-            ? this.songs[currentIndex + 1]
-            : this.songs[0]
-      }
-
-      this.playedSongs.push(nextSong)
-      this.$emit('update:currentSong', nextSong)
-    },
-    toggleLoop() {
-      this.isLooping = !this.isLooping
-    },
-    toggleShuffle() {
-      this.isShuffling = !this.isShuffling
-      this.playedSongs = [] // Reset the played songs when shuffling is toggled
-    },
-    shuffleArray(array) {
-      const shuffledArray = [...array]
-      for (let i = shuffledArray.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[shuffledArray[i], shuffledArray[j]] = [
-          shuffledArray[j],
-          shuffledArray[i]
-        ]
-      }
-      return shuffledArray
-    },
-    seek(event) {
-      const progressBar = this.$refs.progressBar
-      const audio = this.$refs.audio
-      const rect = progressBar.getBoundingClientRect()
-      const offsetX = event.clientX - rect.left
-      const width = rect.width
-      const percentage = offsetX / width
-      const seekTime = audio.duration * percentage
-      audio.currentTime = seekTime
-      this.updateTime()
     }
+  },
+  { immediate: true }
+)
+
+// Watch for volume changes
+watch(volume, (newVolume) => {
+  const audio = document.querySelector('audio')
+  if (audio) {
+    audio.volume = newVolume
   }
+})
+
+// Methods
+const playPause = () => {
+  const audio = document.querySelector('audio')
+  if (audio) {
+    if (isPlaying.value) {
+      audio.pause()
+    } else {
+      audio.play()
+    }
+    isPlaying.value = !isPlaying.value
+  }
+}
+
+const stop = () => {
+  const audio = document.querySelector('audio')
+  if (audio) {
+    audio.pause()
+    audio.currentTime = 0
+    isPlaying.value = false
+  }
+}
+
+const handleEnd = () => {
+  const currentIndex = props.songs.findIndex(
+    (song) => song.src === props.currentSong.src
+  )
+
+  if (currentIndex === props.songs.length - 1) {
+    if (isLooping.value) {
+      emit('update:currentSong', props.songs[0])
+      isPlaying.value = false
+    } else {
+      isPlaying.value = false
+    }
+  } else {
+    next()
+  }
+}
+
+const updateTime = () => {
+  const audio = document.querySelector('audio')
+  if (audio) {
+    currentTime.value = formatTime(audio.currentTime)
+    progress.value = (audio.currentTime / audio.duration) * 100
+  }
+}
+
+const setDuration = () => {
+  const audio = document.querySelector('audio')
+  if (audio) {
+    duration.value = formatTime(audio.duration)
+  }
+}
+
+const formatTime = (seconds) => {
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+const previous = () => {
+  const currentIndex = props.songs.findIndex(
+    (song) => song.src === props.currentSong.src
+  )
+
+  if (currentIndex === 0) {
+    emit('update:currentSong', props.songs[props.songs.length - 1])
+  } else {
+    emit('update:currentSong', props.songs[currentIndex - 1])
+  }
+}
+
+const next = () => {
+  let nextSong
+
+  if (isShuffling.value) {
+    const unplayedSongs = props.songs.filter(
+      (song) => !playedSongs.value.includes(song)
+    )
+
+    if (unplayedSongs.length === 0) {
+      playedSongs.value = []
+      nextSong = props.songs[Math.floor(Math.random() * props.songs.length)]
+    } else {
+      nextSong = unplayedSongs[Math.floor(Math.random() * unplayedSongs.length)]
+    }
+  } else {
+    const currentIndex = props.songs.findIndex(
+      (song) => song.src === props.currentSong.src
+    )
+    nextSong =
+      currentIndex < props.songs.length - 1
+        ? props.songs[currentIndex + 1]
+        : props.songs[0]
+  }
+
+  playedSongs.value.push(nextSong)
+  emit('update:currentSong', nextSong)
+}
+
+const toggleLoop = () => {
+  isLooping.value = !isLooping.value
+}
+
+const toggleShuffle = () => {
+  isShuffling.value = !isShuffling.value
+  playedSongs.value = []
+}
+
+const seek = (event) => {
+  const progressBar = document.querySelector('.progress-bar')
+  const audio = document.querySelector('audio')
+  const rect = progressBar.getBoundingClientRect()
+  const offsetX = event.clientX - rect.left
+  const width = rect.width
+  const percentage = offsetX / width
+  const seekTime = audio.duration * percentage
+  audio.currentTime = seekTime
+  updateTime()
 }
 </script>
 
@@ -348,15 +336,15 @@ export default {
 }
 
 .title-container {
-  position: relative; /* Ensure container's position is relative */
-  height: 2.5rem; /* Fixed height to match the maximum height of the text */
-  overflow: hidden; /* Hide any overflow to keep the layout consistent */
+  position: relative;
+  height: 2.5rem;
+  overflow: hidden;
 }
 
 .title {
-  position: absolute; /* Position text absolutely within the container */
-  width: 100%; /* Ensure text occupies full width of the container */
-  text-align: center; /* Center-align text horizontally */
-  line-height: 2.5rem; /* Adjust line-height to align text vertically */
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  line-height: 2.5rem;
 }
 </style>

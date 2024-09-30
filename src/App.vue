@@ -18,8 +18,6 @@
 import MusicPlayer from './components/MusicPlayer.vue'
 import Playlist from './components/PlayList.vue'
 
-// Use import.meta.glob to fetch all music files
-// Use import.meta.glob to fetch all music and cover files
 const musicFiles = import.meta.glob('@/assets/music/*.mp3', { eager: true })
 const coverFiles = import.meta.glob('@/assets/covers/*.jpg', { eager: true })
 
@@ -27,13 +25,12 @@ const songs = Object.keys(musicFiles).map((key) => {
   const fileName = key.split('/').pop().replace('.mp3', '')
   const [artist, title] = fileName.split(' - ')
 
-  // Absolute path approach
   const coverPath = coverFiles[`/src/assets/covers/${fileName}.jpg`]
     ? `/src/assets/covers/${fileName}.jpg`
     : '/src/assets/covers/default-cover.jpg'
 
   return {
-    title: title || fileName, // Use the full fileName as title if no artist is specified
+    title: title || fileName,
     artist: title ? artist : 'Unknown Artist',
     src: musicFiles[key].default,
     albumArt: coverPath
@@ -54,7 +51,7 @@ export default {
   methods: {
     setSong(song) {
       this.currentSong = song
-      this.$refs.player.playPause() // Play the selected song
+      this.$refs.player.playPause()
     },
     updateCurrentSong(song) {
       this.currentSong = song
