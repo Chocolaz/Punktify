@@ -25,8 +25,12 @@ const songs = Object.keys(musicFiles).map((key) => {
   const fileName = key.split('/').pop().replace('.mp3', '')
   const [artist, title] = fileName.split(' - ')
 
-  const coverPath = coverFiles[`/src/assets/covers/${fileName}.jpg`]
-    ? `/src/assets/covers/${fileName}.jpg`
+  const coverKey = Object.keys(coverFiles).find((coverKey) =>
+    coverKey.endsWith(`${fileName}.jpg`)
+  )
+
+  const coverPath = coverKey
+    ? coverFiles[coverKey].default
     : '/src/assets/covers/default-cover.jpg'
 
   return {
